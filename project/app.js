@@ -10,10 +10,11 @@ import { ApiError } from "./utils/ApiError.js";
 // Routes imports
 import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
-import orderRouter from "./routes/order.routes.js";
-import reviewRouter from "./routes/review.routes.js";
+import categoryRouter from "./routes/category.routes.js";
 import productRouter from "./routes/ProductRoute.js";
 import paymentRoute from "./routes/paymentRoute.js";
+import reviewRouter from "./routes/review.routes.js";
+import orderRouter from "./routes/order.routes.js";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use(morgan("dev")); // Logging
 // Routes declaration
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/categories", categoryRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews/:productId", reviewRouter); // Nested route pattern

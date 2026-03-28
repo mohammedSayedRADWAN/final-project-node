@@ -3,18 +3,50 @@ import { asyncHandler } from '../utils/AsyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 
-// Get all products
+// Get all products (with search, filter, and pagination)
 export const getAllProducts = asyncHandler(async (req, res) => {
-    const products = await Product.find().populate("owner", "fullName username email");
+    const { search, category, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
+
+    const filter = {};
+
+    // 1. Search by name (partial match)
+    if (search) {
+        filter.name = { $regex: search, $options: "i" };
+    }
+
+    // 2. Filter by Category ID
+    if (category) {
+        filter.category = category;
+    }
+
+    // 3. Filter by Price Range
+    if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // 4. Execute pagination
+    const options = {
+        page: parseInt(page, 10),
+        limit: parseInt(limit, 10),
+        populate: [{ path: "category", select: "name slug" }, { path: "owner", select: "fullName" }],
+        sort: { createdAt: -1 }
+    };
+
+    const result = await Product.paginate(filter, options);
+
     return res.status(200).json(
-        new ApiResponse(200, products, "Products fetched successfully")
+        new ApiResponse(200, result, "Products fetched successfully")
     );
 });
 
 // Get single product
 export const getProductById = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const product = await Product.findById(id).populate("owner", "fullName username email");
+    const product = await Product.findById(id)
+        .populate("category", "name slug")
+        .populate("owner", "fullName username email");
     
     if (!product) {
         throw new ApiError(404, "Product not found");
@@ -38,6 +70,8 @@ export const createProduct = asyncHandler(async (req, res) => {
         images,
         owner: req.user._id
     });
+
+    await product.populate("category", "name slug");
 
     return res.status(201).json(
         new ApiResponse(201, product, "Product created successfully")

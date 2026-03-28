@@ -5,26 +5,28 @@ const productSchema = new Schema(
     {
         name: {
             type: String,
-            required: true,
-            trim: true
+            required: [true, "Product name is required"],
+            trim: true,
+            index: true
         },
         description: {
             type: String,
-            required: true
+            required: [true, "Product description is required"]
         },
         price: {
             type: Number,
-            required: true,
+            required: [true, "Product price is required"],
             default: 0
         },
         stock: {
             type: Number,
-            required: true,
+            required: [true, "Product stock is required"],
             default: 0
         },
         category: {
-            type: String,
-            required: true
+            type: Schema.Types.ObjectId,
+            ref: "Category",
+            required: [true, "Category is required"]
         },
         images: [
             {
@@ -44,4 +46,8 @@ const productSchema = new Schema(
 
 productSchema.plugin(mongoosePaginate);
 
+// Index for search
+productSchema.index({ name: "text", description: "text" });
+
 export const Product = mongoose.model("Product", productSchema);
+

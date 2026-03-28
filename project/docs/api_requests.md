@@ -149,12 +149,24 @@ Base URL: `http://localhost:8000/api/v1`
 ## 6. Products
 
 ### Get All Products
-**GET** `/products`
-*(Public)*
+**GET** `/products?search=smart&category=ID&minPrice=100&maxPrice=500&page=1&limit=10`
+*(Public, supports search, filtering, and pagination)*
 
-### Get Product by ID
-**GET** `/products/:id`
-*(Public)*
+### Categories
+
+#### Add Category (Admin only)
+**POST** `/categories`
+```json
+{
+    "name": "Electronics",
+    "description": "Smartphones, Laptops, and gadgets"
+}
+```
+
+#### Get All Categories (Public)
+**GET** `/categories`
+
+---
 
 ### Create Product
 **POST** `/products`
@@ -165,7 +177,7 @@ Base URL: `http://localhost:8000/api/v1`
     "description": "The ultimate smartphone with a stunning display and powerful camera.",
     "price": 999.99,
     "stock": 50,
-    "category": "Electronics",
+    "category": "CATEGORY_ID_HERE",
     "images": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
 }
 ```

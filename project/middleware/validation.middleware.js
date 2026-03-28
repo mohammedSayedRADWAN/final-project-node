@@ -70,13 +70,23 @@ const schemas = {
             status: Joi.string().required().valid("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
         })
     },
+    category: {
+        add: Joi.object({
+            name: Joi.string().required().trim().min(3).max(50),
+            description: Joi.string().optional().max(500)
+        }),
+        update: Joi.object({
+            name: Joi.string().optional().trim().min(3).max(50),
+            description: Joi.string().optional().max(500)
+        }).min(1)
+    },
     product: {
         create: Joi.object({
             name: Joi.string().required().trim().min(3).max(100),
             description: Joi.string().required().min(10).max(2000),
             price: Joi.number().required().min(0),
             stock: Joi.number().required().min(0),
-            category: Joi.string().required(),
+            category: Joi.string().required().regex(/^[0-9a-fA-F]{24}$/).message("Invalid category ID"),
             images: Joi.array().items(Joi.string().uri()).optional()
         }),
         update: Joi.object({
@@ -84,7 +94,7 @@ const schemas = {
             description: Joi.string().optional().min(10).max(2000),
             price: Joi.number().optional().min(0),
             stock: Joi.number().optional().min(0),
-            category: Joi.string().optional(),
+            category: Joi.string().optional().regex(/^[0-9a-fA-F]{24}$/).message("Invalid category ID"),
             images: Joi.array().items(Joi.string().uri()).optional()
         })
     }
