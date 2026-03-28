@@ -101,11 +101,59 @@ Base URL: `http://localhost:8000/api/v1`
 
 ---
 
-## 5. Orders
+## 5. Shopping cart
 
-### Place Order
+Each logged-in user has **one cart** stored in MongoDB (`Cart` collection). Use these routes to add lines, change quantities, remove lines, then checkout with `fromCart: true` (see Orders).
+
+### Get cart (with product details)
+**GET** `/cart`
+*(Requires auth)*
+
+Returns the cart document: `items[]` with populated `productId` (name, price, stock, images, category).
+
+### Add to cart
+**POST** `/cart/items`
+*(Requires auth)*
+
+Adds `quantity` to an existing line for that product, or creates a new line.
+
+```json
+{
+    "productId": "65f1a...",
+    "quantity": 2
+}
+```
+
+### Set quantity for a line
+**PATCH** `/cart/items/:productId`
+*(Requires auth)*
+
+Sets the line quantity to an absolute value (must be ≥ 1). To remove a product, use DELETE below.
+
+```json
+{
+    "quantity": 3
+}
+```
+
+### Remove one product from cart
+**DELETE** `/cart/items/:productId`
+*(Requires auth)*
+
+### Clear entire cart
+**DELETE** `/cart`
+*(Requires auth)*
+
+---
+
+## 6. Orders
+
+### Place order (explicit items)
 **POST** `/orders`
 *(Requires auth)*
+
+Same as before: send line items in the body.
+
 ```json
 {
     "items": [
@@ -123,6 +171,27 @@ Base URL: `http://localhost:8000/api/v1`
     }
 }
 ```
+
+### Place order from saved cart
+**POST** `/orders`
+*(Requires auth)*
+
+Uses the current server cart as line items, then **clears the cart** after a successful order.
+
+```json
+{
+    "fromCart": true,
+    "shippingAddress": {
+        "addressLine1": "123 Main St",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10001",
+        "country": "USA"
+    }
+}
+```
+
+*(Do not send `items` when using `fromCart: true`; the controller ignores them for checkout.)*
 
 ### Get Order History
 **GET** `/orders/history`
@@ -146,7 +215,7 @@ Base URL: `http://localhost:8000/api/v1`
 ```
 ---
 
-## 6. Products
+## 7. Products
 
 ### Get All Products
 **GET** `/products?search=smart&category=ID&minPrice=100&maxPrice=500&page=1&limit=10`

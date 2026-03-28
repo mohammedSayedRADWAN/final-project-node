@@ -1,12 +1,24 @@
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 import { OrderService } from "../services/order.service.js";
 
 /**
  * @description Order Controller
  */
 const placeOrder = asyncHandler(async (req, res) => {
-    const order = await OrderService.placeOrder(req.user._id, req.body);
+    const useCart = req.body.fromCart === true;
+    const { items, shippingAddress } = req.body;
+
+    if (!useCart && (!items || items.length === 0)) {
+        throw new ApiError(400, "Provide a non-empty items array, or set fromCart to true");
+    }
+
+    const order = await OrderService.placeOrder(req.user._id, {
+        items,
+        shippingAddress,
+        fromCart: useCart
+    });
     return res.status(201).json(new ApiResponse(201, order, "Order placed successfully"));
 });
 

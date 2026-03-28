@@ -56,15 +56,25 @@ const schemas = {
             comment: Joi.string().optional().min(5)
         }).min(1) // at least one field must be provided for update
     },
+    cart: {
+        addItem: Joi.object({
+            productId: Joi.string().required().regex(/^[0-9a-fA-F]{24}$/).message("Invalid product ID"),
+            quantity: Joi.number().required().integer().min(1)
+        }),
+        updateItem: Joi.object({
+            quantity: Joi.number().required().integer().min(1)
+        })
+    },
     order: {
         place: Joi.object({
+            shippingAddress: Joi.object().required(),
+            fromCart: Joi.boolean().optional(),
             items: Joi.array().items(
                 Joi.object({
                     productId: Joi.string().required(),
                     quantity: Joi.number().required().min(1)
                 })
-            ).required().min(1),
-            shippingAddress: Joi.object().required()
+            ).optional()
         }),
         updateStatus: Joi.object({
             status: Joi.string().required().valid("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
