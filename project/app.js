@@ -1,22 +1,64 @@
-import express from 'express';
-import { connectDB } from './MongoDB/DBConnection.js';
-import productRoutes from './routes/ProductRoute.js';
-// import orderRoutes from './routes/OrderRoutes.js';
-import { errorHandler } from './middleware/ErrorMiddleware.js';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import helmet from "helmet";
+import morgan from "morgan";
+import xss from "xss-clean";
+import {
+    apiRateLimiter,
+    sanitizeMiddleware
+} from "./middleware/security.middleware.js";
+import { ApiError } from "./utils/ApiError.js";
+
+// Routes imports
+import authRouter from "./routes/auth.routes.js";
+import userRouter from "./routes/user.routes.js";
+import orderRouter from "./routes/order.routes.js";
+import reviewRouter from "./routes/review.routes.js";
+import productRouter from "./routes/ProductRoute.js";
 
 const app = express();
 
+// Global Middlewares
+app.use(helmet()); // Security headers
+app.use(cors({
+    origin: process.env.CORS_ORIGIN,
+    credentials: true
+}));
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
+app.use(cookieParser());
+app.use(morgan("dev")); // Logging
 
-app.use(express.json());
+// Routes declaration
+app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/products", productRouter);
+app.use("/api/v1/orders", orderRouter);
+app.use("/api/v1/reviews/:productId", reviewRouter); // Nested route pattern
 
-connectDB();
+// API rate limiting
+app.use("/api/v1", apiRateLimiter);
 
-app.use('/products', productRoutes);
-// app.use('/orders', orderRoutes);
+// Global Error Handler
+app.use((err, req, res, next) => {
+    if (err instanceof ApiError) {
+        return res.status(err.statusCode).json({
+            success: err.success,
+            message: err.message,
+            errors: err.errors,
+            stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+        });
+    }
 
-// Error handler
-app.use(errorHandler);
-
-app.listen(3000, () => {
-    console.log('Server running on port 3000');
+    // Default error
+    console.error("UNHANDLED ERROR:", err);
+    return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+    });
 });
+
+export { app };
