@@ -4,10 +4,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import xss from "xss-clean";
-import {
-    apiRateLimiter,
-    sanitizeMiddleware
-} from "./middleware/security.middleware.js";
+import {apiRateLimiter,sanitizeMiddleware} from "./middleware/security.middleware.js";
 import { ApiError } from "./utils/ApiError.js";
 
 // Routes imports
@@ -16,6 +13,7 @@ import userRouter from "./routes/user.routes.js";
 import orderRouter from "./routes/order.routes.js";
 import reviewRouter from "./routes/review.routes.js";
 import productRouter from "./routes/ProductRoute.js";
+import paymentRoute from "./routes/paymentRoute.js";
 
 const app = express();
 
@@ -37,6 +35,7 @@ app.use("/api/v1/users", userRouter);
 app.use("/api/v1/products", productRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews/:productId", reviewRouter); // Nested route pattern
+app.use("/api/payment", paymentRoute);
 
 // API rate limiting
 app.use("/api/v1", apiRateLimiter);

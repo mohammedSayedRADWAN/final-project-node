@@ -1,0 +1,12 @@
+import express from "express";
+import { createPayment, getAllPayments,getPaymentById,updatePaymentStatus } from "../controllers/paymentController.js";
+
+const router = express.Router();
+
+router.post("/create", createPayment);
+router.get("/all", getAllPayments);
+router.get("/:id", getPaymentById);
+router.put("/:id/status", updatePaymentStatus);
+
+
+export default router;
