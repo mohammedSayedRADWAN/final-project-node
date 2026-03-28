@@ -26,12 +26,11 @@ const categorySchema = new Schema(
     }
 );
 
-// Pre-save hook to generate slug
-categorySchema.pre("save", function (next) {
+// Pre-save hook to generate slug (Mongoose 9+: no `next` callback; sync hook is enough)
+categorySchema.pre("save", function () {
     if (this.isModified("name")) {
         this.slug = slugify(this.name, { lower: true, strict: true });
     }
-    next();
 });
 
 export const Category = mongoose.model("Category", categorySchema);

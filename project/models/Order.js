@@ -28,6 +28,16 @@ const orderSchema = new Schema(
             required: true
         },
         items: [orderItemSchema],
+        subtotal: {
+            type: Number,
+            required: true
+        },
+        shipping: {
+            type: Number,
+            required: true,
+            default: 0,
+            min: 0
+        },
         totalAmount: {
             type: Number,
             required: true

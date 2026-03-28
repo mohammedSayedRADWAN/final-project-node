@@ -4,12 +4,24 @@ import { ApiError } from "../utils/ApiError.js";
 /**
  * @description Validation schemas and middleware
  */
+const validateOptions = {
+    abortEarly: false,
+    stripUnknown: true
+};
+
 const validate = (schema) => (req, res, next) => {
-    const { error } = schema.validate(req.body);
+   
+    const payload =
+        req.body !== undefined && req.body !== null && typeof req.body === "object" && !Array.isArray(req.body)
+            ? req.body
+            : {};
+
+    const { error, value } = schema.validate(payload, validateOptions);
     if (error) {
         const message = error.details.map((detail) => detail.message).join(", ");
         throw new ApiError(400, message);
     }
+    req.body = value;
     next();
 };
 

@@ -2,6 +2,7 @@ import { Order } from "../models/Order.js";
 import { Product } from "../models/Product.js";
 import { ApiError } from "../utils/ApiError.js";
 import { CartService } from "./cart.service.js";
+import { SHIPPING_FEE } from "../config/shipping.js";
 
 /**
  * @description Order Management Logic
@@ -17,7 +18,7 @@ class OrderService {
             }
         }
 
-        let totalAmount = 0;
+        let subtotal = 0;
         const orderItems = [];
 
         for (const item of lineItems) {
@@ -35,16 +36,21 @@ class OrderService {
                 quantity: item.quantity
             });
 
-            totalAmount += product.price * item.quantity;
+            subtotal += product.price * item.quantity;
 
             // Reduce stock
             product.stock -= item.quantity;
             await product.save();
         }
 
+        const shippingFee = SHIPPING_FEE;
+        const totalAmount = subtotal + shippingFee;
+
         const order = await Order.create({
             customer: userId,
             items: orderItems,
+            subtotal,
+            shipping: shippingFee,
             totalAmount,
             shippingAddress,
             status: "Pending"

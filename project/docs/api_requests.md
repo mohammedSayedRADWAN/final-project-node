@@ -152,7 +152,7 @@ Sets the line quantity to an absolute value (must be ≥ 1). To remove a product
 **POST** `/orders`
 *(Requires auth)*
 
-Same as before: send line items in the body.
+Send line items and **shipping address** only. **Shipping is a fixed fee** set in code: `SHIPPING_FEE` in `project/config/shipping.js` (default **50**). The response includes **`subtotal`**, **`shipping`**, and **`totalAmount`** (`subtotal + shipping`).
 
 ```json
 {
@@ -176,7 +176,7 @@ Same as before: send line items in the body.
 **POST** `/orders`
 *(Requires auth)*
 
-Uses the current server cart as line items, then **clears the cart** after a successful order.
+Uses the current server cart as line items, then **clears the cart** after a successful order. Same constant **shipping** fee as above.
 
 ```json
 {
