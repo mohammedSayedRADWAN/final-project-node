@@ -29,6 +29,17 @@ class ReviewService {
         return reviews;
     }
 
+    static async updateReview(userId, reviewId, updateData) {
+        const review = await Review.findOneAndUpdate(
+            { _id: reviewId, user: userId },
+            { $set: updateData },
+            { new: true, runValidators: true }
+        ).populate("user", "fullName");
+
+        if (!review) throw new ApiError(404, "Review not found or unauthorized");
+        return review;
+    }
+
     static async deleteReview(userId, reviewId) {
         const review = await Review.findOneAndDelete({ _id: reviewId, user: userId });
         if (!review) throw new ApiError(404, "Review not found or unauthorized");

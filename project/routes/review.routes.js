@@ -2,6 +2,7 @@ import { Router } from "express";
 import { 
     addReview, 
     getProductReviews, 
+    updateReview,
     deleteReview 
 } from "../controllers/review.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -14,6 +15,8 @@ router.route("/").get(getProductReviews);
 // Secured routes
 router.use(verifyJWT);
 router.route("/").post(validate(schemas.review.add), addReview);
-router.route("/:reviewId").delete(deleteReview);
+router.route("/:reviewId")
+    .patch(validate(schemas.review.update), updateReview)
+    .delete(deleteReview);
 
 export default router;

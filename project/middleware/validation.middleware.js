@@ -50,7 +50,11 @@ const schemas = {
         add: Joi.object({
             rating: Joi.number().required().min(1).max(5),
             comment: Joi.string().required().min(5)
-        })
+        }),
+        update: Joi.object({
+            rating: Joi.number().optional().min(1).max(5),
+            comment: Joi.string().optional().min(5)
+        }).min(1) // at least one field must be provided for update
     },
     order: {
         place: Joi.object({
@@ -61,6 +65,9 @@ const schemas = {
                 })
             ).required().min(1),
             shippingAddress: Joi.object().required()
+        }),
+        updateStatus: Joi.object({
+            status: Joi.string().required().valid("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
         })
     },
     product: {

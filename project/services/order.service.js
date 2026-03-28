@@ -46,6 +46,49 @@ class OrderService {
     static async getOrderHistory(userId) {
         return await Order.find({ customer: userId }).sort("-createdAt").lean();
     }
+
+    static async getOrderDetails(userId, orderId, role) {
+        const query = { _id: orderId };
+        if (role !== "Admin") {
+            query.customer = userId;
+        }
+
+        const order = await Order.findOne(query).populate("customer", "fullName email");
+        if (!order) throw new ApiError(404, "Order not found or unauthorized");
+        return order;
+    }
+
+    static async updateOrderStatus(orderId, status) {
+        const order = await Order.findByIdAndUpdate(
+            orderId,
+            { $set: { status } },
+            { new: true, runValidators: true }
+        );
+
+        if (!order) throw new ApiError(404, "Order not found");
+        return order;
+    }
+
+    static async cancelOrder(userId, orderId) {
+        const order = await Order.findOne({ _id: orderId, customer: userId });
+
+        if (!order) throw new ApiError(404, "Order not found or unauthorized");
+        if (order.status !== "Pending") {
+            throw new ApiError(400, `Cannot cancel order in ${order.status} status`);
+        }
+
+        // Restore stock
+        for (const item of order.items) {
+            await Product.findByIdAndUpdate(item.productId, {
+                $inc: { stock: item.quantity }
+            });
+        }
+
+        order.status = "Cancelled";
+        await order.save();
+
+        return order;
+    }
 }
 
 export { OrderService };

@@ -72,6 +72,7 @@ Base URL: `http://localhost:8000/api/v1`
 
 ### Add Review
 **POST** `/reviews/:productId`
+*(Requires auth)*
 ```json
 {
     "rating": 5,
@@ -79,12 +80,32 @@ Base URL: `http://localhost:8000/api/v1`
 }
 ```
 
+### Get Product Reviews
+**GET** `/reviews/:productId`
+*(Public, supports query params for pagination)*
+`GET /reviews/:productId?page=1&limit=10`
+
+### Update Review
+**PATCH** `/reviews/:productId/:reviewId`
+*(Requires auth, only review owner can update)*
+```json
+{
+    "rating": 4,
+    "comment": "Updated: Still good, but noticed some minor issues."
+}
+```
+
+### Delete Review
+**DELETE** `/reviews/:reviewId`
+*(Requires auth, only review owner can delete)*
+
 ---
 
 ## 5. Orders
 
 ### Place Order
 **POST** `/orders`
+*(Requires auth)*
 ```json
 {
     "items": [
@@ -95,8 +116,32 @@ Base URL: `http://localhost:8000/api/v1`
     ],
     "shippingAddress": {
         "addressLine1": "123 Main St",
-        "city": "New York"
+        "city": "New York",
+        "state": "NY",
+        "postalCode": "10001",
+        "country": "USA"
     }
+}
+```
+
+### Get Order History
+**GET** `/orders/history`
+*(Requires auth)*
+
+### Get Order Details
+**GET** `/orders/:id`
+*(Requires auth)*
+
+### Cancel Order
+**PATCH** `/orders/:id/cancel`
+*(Requires auth, only if status is "Pending")*
+
+### Update Order Status
+**PATCH** `/orders/:id/status`
+*(Requires auth & Admin role)*
+```json
+{
+    "status": "Shipped"
 }
 ```
 ---

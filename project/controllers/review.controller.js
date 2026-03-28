@@ -15,6 +15,11 @@ const getProductReviews = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, reviews, "Reviews fetched"));
 });
 
+const updateReview = asyncHandler(async (req, res) => {
+    const review = await ReviewService.updateReview(req.user._id, req.params.reviewId, req.body);
+    return res.status(200).json(new ApiResponse(200, review, "Review updated successfully"));
+});
+
 const deleteReview = asyncHandler(async (req, res) => {
     await ReviewService.deleteReview(req.user._id, req.params.reviewId);
     return res.status(200).json(new ApiResponse(200, {}, "Review deleted successfully"));
@@ -23,5 +28,6 @@ const deleteReview = asyncHandler(async (req, res) => {
 export {
     addReview,
     getProductReviews,
+    updateReview,
     deleteReview
 };

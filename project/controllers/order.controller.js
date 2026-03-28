@@ -15,7 +15,25 @@ const getOrderHistory = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, orders, "Order history fetched"));
 });
 
+const getOrderDetails = asyncHandler(async (req, res) => {
+    const order = await OrderService.getOrderDetails(req.user._id, req.params.id, req.user.role);
+    return res.status(200).json(new ApiResponse(200, order, "Order details fetched"));
+});
+
+const updateOrderStatus = asyncHandler(async (req, res) => {
+    const order = await OrderService.updateOrderStatus(req.params.id, req.body.status);
+    return res.status(200).json(new ApiResponse(200, order, "Order status updated successfully"));
+});
+
+const cancelOrder = asyncHandler(async (req, res) => {
+    const order = await OrderService.cancelOrder(req.user._id, req.params.id);
+    return res.status(200).json(new ApiResponse(200, order, "Order cancelled successfully"));
+});
+
 export {
     placeOrder,
-    getOrderHistory
+    getOrderHistory,
+    getOrderDetails,
+    updateOrderStatus,
+    cancelOrder
 };
