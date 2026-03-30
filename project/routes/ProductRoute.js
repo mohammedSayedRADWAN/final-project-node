@@ -1,17 +1,26 @@
 import express from 'express';
-import { protect } from '../middleware/auth.middleware.js';
-import { isAdmin } from '../middleware/role.middleware.js';
-import { validate } from '../middleware/ValidationMiddleware.js';
-import { productSchema } from '../validation/productValidat.js';
-import * as productController from '../controllers/productController.js';
+import { verifyJWT, authorizeRoles } from '../middleware/auth.middleware.js';
+import { validate, schemas } from "../middleware/validation.middleware.js";
+import {
+    getAllProducts,
+    getProductById,
+    createProduct,
+    updateProduct,
+    deleteProduct
+} from '../controllers/productController.js';
 
 const router = express.Router();
 
-router.get('/', productController.getAllProducts);
-router.get('/:id', productController.getProductById);
+// Public routes
+router.route('/').get(getAllProducts);
+router.route('/:id').get(getProductById);
 
-router.post('/', protect, isAdmin, validate(productSchema), productController.createProduct);
-router.put('/:id', protect, isAdmin, productController.updateProduct);
-router.delete('/:id', protect, isAdmin, productController.deleteProduct);
+// Secured routes (Admin & Seller)
+router.use(verifyJWT);
+router.use(authorizeRoles("Admin", "Seller"));
+
+router.route('/').post(validate(schemas.product.create), createProduct);
+router.route('/:id').put(validate(schemas.product.update), updateProduct);
+router.route('/:id').delete(deleteProduct);
 
 export default router;

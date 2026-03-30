@@ -7,11 +7,12 @@ It aims to [describe your project goal here briefly].
 ---
 
 ## 🧠 Features
-- User Authentication (Login / Register)
-- CRUD Operations
-- Responsive UI
-- RESTful APIs
-- [Add more features based on your project]
+- **User Authentication**: Secure Login & Register with Email Verification (Mailtrap).
+- **Product Management**: Full CRUD for Products (Admin/Seller only).
+- **Review System**: User reviews for products with rating and ownership control.
+- **Order Management**: Place orders, track history, and manage fulfillment (Admin).
+- **Security**: JWT Authentication, Role-Based Access Control (RBAC), and Rate Limiting.
+
 
 ---
 
@@ -22,7 +23,8 @@ It aims to [describe your project goal here briefly].
 - Express.js
 
 ### 🔹 Database:
-- PostgreSQL
+- MongoDB (Mongoose ODM)
+
 
 ### 🔹 Tools:
 - Git & GitHub
