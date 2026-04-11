@@ -3,16 +3,25 @@ import { Product } from "../models/Product.js";
 import { ApiError } from "../utils/ApiError.js";
 
 class CartService {
-    static async getOrCreateCartDoc(userId) {
-        let cart = await Cart.findOne({ user: userId });
+    /**
+     * @description Helper to get or create a cart for a User or Guest
+     */
+    static async getOrCreateCartDoc({ userId, guestId }) {
+        if (!userId && !guestId) {
+            throw new ApiError(400, "User ID or Guest ID must be provided");
+        }
+
+        const query = userId ? { user: userId } : { guestId: guestId };
+        let cart = await Cart.findOne(query);
+
         if (!cart) {
-            cart = await Cart.create({ user: userId, items: [] });
+            cart = await Cart.create({ ...query, items: [] });
         }
         return cart;
     }
 
-    static async getCart(userId) {
-        const cart = await this.getOrCreateCartDoc(userId);
+    static async getCart({ userId, guestId }) {
+        const cart = await this.getOrCreateCartDoc({ userId, guestId });
         await cart.populate({
             path: "items.productId",
             select: "name price stock images category",
@@ -22,8 +31,9 @@ class CartService {
     }
 
     /** Lines as { productId, quantity } for checkout (no populate). */
-    static async getRawItems(userId) {
-        const cart = await Cart.findOne({ user: userId }).lean();
+    static async getRawItems({ userId, guestId }) {
+        const query = userId ? { user: userId } : { guestId: guestId };
+        const cart = await Cart.findOne(query).lean();
         if (!cart || !cart.items.length) return [];
         return cart.items.map((line) => ({
             productId: line.productId,
@@ -31,11 +41,11 @@ class CartService {
         }));
     }
 
-    static async addItem(userId, productId, quantity) {
+    static async addItem({ userId, guestId }, productId, quantity) {
         const product = await Product.findById(productId);
         if (!product) throw new ApiError(404, "Product not found");
 
-        const cart = await this.getOrCreateCartDoc(userId);
+        const cart = await this.getOrCreateCartDoc({ userId, guestId });
         const idx = cart.items.findIndex(
             (line) => line.productId.toString() === productId
         );
@@ -47,18 +57,18 @@ class CartService {
         }
 
         await cart.save();
-        return this.getCart(userId);
+        return this.getCart({ userId, guestId });
     }
 
-    static async setItemQuantity(userId, productId, quantity) {
+    static async setItemQuantity({ userId, guestId }, productId, quantity) {
         if (quantity < 1) {
-            return this.removeItem(userId, productId);
+            return this.removeItem({ userId, guestId }, productId);
         }
 
         const product = await Product.findById(productId);
         if (!product) throw new ApiError(404, "Product not found");
 
-        const cart = await this.getOrCreateCartDoc(userId);
+        const cart = await this.getOrCreateCartDoc({ userId, guestId });
         const idx = cart.items.findIndex(
             (line) => line.productId.toString() === productId
         );
@@ -69,11 +79,12 @@ class CartService {
 
         cart.items[idx].quantity = quantity;
         await cart.save();
-        return this.getCart(userId);
+        return this.getCart({ userId, guestId });
     }
 
-    static async removeItem(userId, productId) {
-        const cart = await Cart.findOne({ user: userId });
+    static async removeItem({ userId, guestId }, productId) {
+        const query = userId ? { user: userId } : { guestId: guestId };
+        const cart = await Cart.findOne(query);
         if (!cart) throw new ApiError(404, "Cart not found");
 
         const before = cart.items.length;
@@ -85,12 +96,40 @@ class CartService {
         }
 
         await cart.save();
-        return this.getCart(userId);
+        return this.getCart({ userId, guestId });
     }
 
-    static async clearCart(userId) {
-        await Cart.findOneAndUpdate({ user: userId }, { $set: { items: [] } });
-        return this.getCart(userId);
+    static async clearCart({ userId, guestId }) {
+        const query = userId ? { user: userId } : { guestId: guestId };
+        await Cart.findOneAndUpdate(query, { $set: { items: [] } });
+        return this.getCart({ userId, guestId });
+    }
+
+    /**
+     * @description Merges a guest cart into a user's cart upon login
+     */
+    static async mergeCart(userId, guestId) {
+        if (!userId || !guestId) return;
+
+        const guestCart = await Cart.findOne({ guestId });
+        if (!guestCart || !guestCart.items.length) return;
+
+        const userCart = await this.getOrCreateCartDoc({ userId });
+
+        for (const guestItem of guestCart.items) {
+            const userItemIdx = userCart.items.findIndex(
+                item => item.productId.toString() === guestItem.productId.toString()
+            );
+
+            if (userItemIdx > -1) {
+                userCart.items[userItemIdx].quantity += guestItem.quantity;
+            } else {
+                userCart.items.push(guestItem);
+            }
+        }
+
+        await userCart.save();
+        await Cart.deleteOne({ guestId }); // Clean up guest cart
     }
 }
 

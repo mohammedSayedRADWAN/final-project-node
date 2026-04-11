@@ -65,7 +65,17 @@ const userSchema = new Schema(
         emailVerificationToken: String,
         emailVerificationExpiry: Date,
         passwordResetToken: String,
-        passwordResetExpiry: Date
+        passwordResetExpiry: Date,
+        isDeleted: {
+            type: Boolean,
+            default: false,
+            select: false // Hide by default for security
+        },
+        isRestricted: {
+            type: Boolean,
+            default: false
+        },
+        restrictionReason: String
     },
     {
         timestamps: true

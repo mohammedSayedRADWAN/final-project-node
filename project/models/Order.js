@@ -25,8 +25,17 @@ const orderSchema = new Schema(
         customer: {
             type: Schema.Types.ObjectId,
             ref: "User",
-            required: true
+            required: false // Optional for guests
         },
+        isGuest: {
+            type: Boolean,
+            default: false
+        },
+        guestEmail: {
+            type: String,
+            required: function() { return this.isGuest; }
+        },
+        guestName: String,
         items: [orderItemSchema],
         subtotal: {
             type: Number,

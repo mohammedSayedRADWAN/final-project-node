@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { verifyJWT } from "../middleware/auth.middleware.js";
+import { optionalAuth } from "../middleware/auth.middleware.js";
 import { validate, schemas } from "../middleware/validation.middleware.js";
 import {
     getCart,
@@ -11,7 +11,7 @@ import {
 
 const router = Router();
 
-router.use(verifyJWT);
+router.use(optionalAuth);
 
 router.route("/").get(getCart).delete(clearCart);
 router.route("/items").post(validate(schemas.cart.addItem), addToCart);

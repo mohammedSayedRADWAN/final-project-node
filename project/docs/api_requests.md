@@ -156,19 +156,14 @@ Send line items and **shipping address** only. **Shipping is a fixed fee** set i
 
 ```json
 {
-    "items": [
-        {
-            "productId": "65f1a...",
-            "quantity": 2
-        }
-    ],
-    "shippingAddress": {
-        "addressLine1": "123 Main St",
-        "city": "New York",
-        "state": "NY",
-        "postalCode": "10001",
-        "country": "USA"
-    }
+  "fromCart": true,
+  "shippingAddress": {
+    "addressLine1": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "postalCode": "10001",
+    "country": "USA"
+  }
 }
 ```
 

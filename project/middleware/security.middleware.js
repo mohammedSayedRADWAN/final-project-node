@@ -1,9 +1,7 @@
 import rateLimit from "express-rate-limit";
 import mongoSanitize from "express-mongo-sanitize";
 
-/**
- * @description Security middlewares configuration
- */
+
 
 // Rate limiting for auth routes
 const authRateLimiter = rateLimit({

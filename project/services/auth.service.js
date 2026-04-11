@@ -1,5 +1,6 @@
 import { User } from "../models/User.js";
 import { ApiError } from "../utils/ApiError.js";
+import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { sendEmail } from "./email.service.js";
 
@@ -139,6 +140,15 @@ class AuthService {
 
         if (!user) {
             throw new ApiError(404, "User does not exist");
+        }
+
+        // Check if user is deleted or restricted
+        if (user.isDeleted) {
+            throw new ApiError(403, "This account has been deactivated");
+        }
+
+        if (user.isRestricted) {
+            throw new ApiError(403, `This account is restricted. Reason: ${user.restrictionReason || "Violation of Terms"}`);
         }
 
         const isPasswordValid = await user.isPasswordCorrect(password);

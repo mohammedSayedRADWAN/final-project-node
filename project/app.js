@@ -4,7 +4,7 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import xss from "xss-clean";
-import {apiRateLimiter,sanitizeMiddleware} from "./middleware/security.middleware.js";
+import { apiRateLimiter, sanitizeMiddleware } from "./middleware/security.middleware.js";
 import { ApiError } from "./utils/ApiError.js";
 
 // Routes imports
@@ -30,6 +30,12 @@ app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
 app.use(cookieParser());
 app.use(morgan("dev")); // Logging
+
+// Stripe Webhook (MUST be before express.json() to get raw body)
+app.post("/api/payment/webhook", express.raw({ type: "application/json" }), (req, res, next) => {
+    // We forward to the controller but keep the route here to ensure raw body
+    next();
+});
 
 // Routes declaration
 app.use("/api/v1/auth", authRouter);

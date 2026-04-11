@@ -21,8 +21,16 @@ const cartSchema = new Schema(
         user: {
             type: Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            required: false,
             unique: true,
+            sparse: true,
+            index: true
+        },
+        guestId: {
+            type: String,
+            required: false,
+            unique: true,
+            sparse: true,
             index: true
         },
         items: [cartItemSchema]

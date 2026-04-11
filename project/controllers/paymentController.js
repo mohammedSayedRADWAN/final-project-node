@@ -1,37 +1,51 @@
 import Payment from "../models/PaymentModel.js";
+import { StripeService } from "../services/stripe.service.js";
+import { asyncHandler } from "../utils/AsyncHandler.js";
+import { ApiResponse } from "../utils/ApiResponse.js";
+import { ApiError } from "../utils/ApiError.js";
 
 
-// CREATE PAYMENT 
-export const createPayment = async (req, res) => {
-  try {
+// CREATE CHECKOUT SESSION
+export const createCheckoutSession = asyncHandler(async (req, res) => {
+  const { orderId } = req.body;
+  const session = await StripeService.createCheckoutSession(orderId, req.user?._id);
 
-    const { userId, orderId, amount, paymentMethod } = req.body;
+  return res.status(200).json(
+    new ApiResponse(200, { url: session.url }, "Checkout session created")
+  );
+});
 
-    const payment = new Payment({
-      userId,
-      orderId,
-      amount,
-      paymentMethod
-    });
+// STRIPE WEBHOOK
+export const handleStripeWebhook = asyncHandler(async (req, res) => {
+  const signature = req.headers['stripe-signature'];
 
-    const savedPayment = await payment.save();
+  // Stripe requires the raw body (req.body is raw here due to app.js config)
+  const result = await StripeService.handleWebhook(signature, req.body);
 
-    res.status(201).json({
-      success: true,
-      message: "Payment created successfully",
-      data: savedPayment
-    });
+  return res.status(200).json(result);
+});
 
-  } catch (error) {
+export const createPayment = asyncHandler(async (req, res) => {
+  const { orderId, paymentMethod } = req.body;
 
-    res.status(500).json({
-      success: false,
-      message: "Error creating payment",
-      error: error.message
-    });
+  const { Order } = await import("../models/Order.js"); // Lazy import to avoid circular dep if any
+  const order = await Order.findById(orderId);
 
+  if (!order) {
+    throw new ApiError(404, "Order not found");
   }
-};
+
+
+  const payment = await Payment.create({
+    userId: order.customer || null, // Could be guest or user
+    orderId,
+    amount: order.totalAmount, // Security: pulled directly from order
+    paymentMethod: paymentMethod || "card",
+    status: "completed"
+  });
+
+  res.status(201).json(new ApiResponse(201, payment, "Payment recorded successfully (Securely)"));
+});
 
 
 

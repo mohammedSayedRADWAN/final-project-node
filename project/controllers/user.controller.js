@@ -30,10 +30,24 @@ const getWishlist = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, wishlist, "Wishlist fetched"));
 });
 
+const getAllUsersAdmin = asyncHandler(async (req, res) => {
+    const users = await UserService.getAllUsersAdmin();
+    return res.status(200).json(new ApiResponse(200, users, "All users fetched for admin"));
+});
+
+const updateUserStatusAdmin = asyncHandler(async (req, res) => {
+    const { userId } = req.params;
+    const { isDeleted, isRestricted, restrictionReason } = req.body;
+    const user = await UserService.updateUserStatusAdmin(userId, { isDeleted, isRestricted, restrictionReason });
+    return res.status(200).json(new ApiResponse(200, user, "User status updated"));
+});
+
 export {
     getProfile,
     updateProfile,
     updateAddress,
     toggleWishlist,
-    getWishlist
+    getWishlist,
+    getAllUsersAdmin,
+    updateUserStatusAdmin
 };

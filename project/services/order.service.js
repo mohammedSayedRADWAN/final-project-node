@@ -8,11 +8,11 @@ import { SHIPPING_FEE } from "../config/shipping.js";
  * @description Order Management Logic
  */
 class OrderService {
-    static async placeOrder(userId, { items, shippingAddress, fromCart }) {
+    static async placeOrder({ userId, guestId }, { items, shippingAddress, fromCart, guestEmail, guestName }) {
         let lineItems = items;
 
         if (fromCart === true) {
-            lineItems = await CartService.getRawItems(userId);
+            lineItems = await CartService.getRawItems({ userId, guestId });
             if (!lineItems.length) {
                 throw new ApiError(400, "Cart is empty");
             }
@@ -46,31 +46,49 @@ class OrderService {
         const shippingFee = SHIPPING_FEE;
         const totalAmount = subtotal + shippingFee;
 
-        const order = await Order.create({
-            customer: userId,
+        const orderData = {
             items: orderItems,
             subtotal,
             shipping: shippingFee,
             totalAmount,
             shippingAddress,
             status: "Pending"
-        });
+        };
+
+        if (userId) {
+            orderData.customer = userId;
+        } else {
+            orderData.isGuest = true;
+            orderData.guestEmail = guestEmail;
+            orderData.guestName = guestName;
+        }
+
+        const order = await Order.create(orderData);
 
         if (fromCart === true) {
-            await CartService.clearCart(userId);
+            await CartService.clearCart({ userId, guestId });
         }
 
         return order;
     }
 
     static async getOrderHistory(userId) {
+        if (!userId) return []; // Guests don't have history in this simple implementation
         return await Order.find({ customer: userId }).sort("-createdAt").lean();
     }
 
     static async getOrderDetails(userId, orderId, role) {
         const query = { _id: orderId };
+        
+        // Admin sees all. Users see their own. Guests see theirs if we had a secret token, but for now we skip restricted guest access.
         if (role !== "Admin") {
-            query.customer = userId;
+            if (userId) {
+                query.customer = userId;
+            } else {
+                 // For now, guests can only see order details right after placement via session
+                 // In a real app, we'd use a unique order token
+                 throw new ApiError(403, "Authentication required to view order details");
+            }
         }
 
         const order = await Order.findOne(query).populate("customer", "fullName email");
@@ -90,7 +108,14 @@ class OrderService {
     }
 
     static async cancelOrder(userId, orderId) {
-        const order = await Order.findOne({ _id: orderId, customer: userId });
+        const query = { _id: orderId };
+        if (userId) {
+            query.customer = userId;
+        } else {
+            throw new ApiError(403, "Login required to cancel orders");
+        }
+
+        const order = await Order.findOne(query);
 
         if (!order) throw new ApiError(404, "Order not found or unauthorized");
         if (order.status !== "Pending") {

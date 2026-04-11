@@ -2,15 +2,17 @@ import Joi from "joi";
 import { ApiError } from "../utils/ApiError.js";
 
 /**
- * @description Validation schemas and middleware
+ * Validation schemas and middleware
  */
 const validateOptions = {
+    // stop validation on first error
     abortEarly: false,
+    // strip unknown fields
     stripUnknown: true
 };
 
 const validate = (schema) => (req, res, next) => {
-   
+
     const payload =
         req.body !== undefined && req.body !== null && typeof req.body === "object" && !Array.isArray(req.body)
             ? req.body
@@ -81,9 +83,13 @@ const schemas = {
         place: Joi.object({
             shippingAddress: Joi.object().required(),
             fromCart: Joi.boolean().optional(),
+            guestEmail: Joi.string().email().optional(),
+            guestName: Joi.string().optional(),
             items: Joi.array().items(
                 Joi.object({
                     productId: Joi.string().required(),
+                    name: Joi.string().optional(),
+                    price: Joi.number().optional(),
                     quantity: Joi.number().required().min(1)
                 })
             ).optional()

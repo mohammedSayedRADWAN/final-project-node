@@ -1,7 +1,18 @@
 import express from "express";
-import { createPayment, getAllPayments,getPaymentById,updatePaymentStatus } from "../controllers/paymentController.js";
+import { 
+    createPayment, 
+    getAllPayments, 
+    getPaymentById, 
+    updatePaymentStatus,
+    createCheckoutSession,
+    handleStripeWebhook
+} from "../controllers/paymentController.js";
+import { verifyJWT, optionalAuth } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
+
+router.post("/create-checkout-session", optionalAuth, createCheckoutSession);
+router.post("/webhook", handleStripeWebhook);
 
 router.post("/create", createPayment);
 router.get("/all", getAllPayments);

@@ -64,6 +64,30 @@ class UserService {
         const user = await User.findById(userId).populate("wishlist").select("wishlist");
         return user.wishlist;
     }
+
+    /**
+     * @description Get all users for admin dashboard
+     */
+    static async getAllUsersAdmin() {
+        // We use .find() without select("-isDeleted") by explicitly selecting it if needed
+        // Or just let the default 'select: false' work for regular users, but here we want to see them.
+        return await User.find({}).select("+isDeleted").sort("-createdAt").lean();
+    }
+
+    /**
+     * @description Update user status (Soft Delete, Restrict, Unrestrict)
+     */
+    static async updateUserStatusAdmin(userId, { isDeleted, isRestricted, restrictionReason }) {
+        const user = await User.findById(userId).select("+isDeleted");
+        if (!user) throw new ApiError(404, "User not found");
+
+        if (isDeleted !== undefined) user.isDeleted = isDeleted;
+        if (isRestricted !== undefined) user.isRestricted = isRestricted;
+        if (restrictionReason !== undefined) user.restrictionReason = restrictionReason;
+
+        await user.save();
+        return user;
+    }
 }
 
 export { UserService };
